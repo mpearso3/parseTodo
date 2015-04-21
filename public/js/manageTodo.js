@@ -1,5 +1,8 @@
 $(document).ready(function()
 {
+//------------------------------------------------------------------
+//                        VARIABLES
+//------------------------------------------------------------------
     var ListItem;
     var query;
     var noTasksMessage      = $("#no-incomplete-message:first");
@@ -8,21 +11,27 @@ $(document).ready(function()
     var completeItemList    = $("#complete-items:first");
     var input               = $("#list-input:first");
 
-    var APP_KEY = "tfkXbywrJUYNKFVW5NJsaAChQzx5VMNbpygBXQlR";
-    var JS_KEY  = "IJBpaJoA9CRSywqFZxDCjHkEVh0OPbUUiT7225ts";
+    var currentUser = Parse.User.current();
 
-    Parse.initialize(APP_KEY, JS_KEY);
-
-    //----------------------------------------------------------------
-    // SubmitButton 
-    //      purpose: Save newly typed Todo item
-    //----------------------------------------------------------------
-    SubmitButton.on('click', function(e)
+    var ShowUserView = Parse.View.extend(
     {
+        template: Handlebars.compile($('#username-template').html()),
+        render: function()
+        {
+            var attributes = this.model.toJSON();
+            this.$el.html(this.template(attributes));
+        }
+    });
+//------------------------------------------------------------------ END Variables
+
+    SubmitButton.on('click', function(e)
+    {   // Save newly typed Todo item
         SaveNewTodo(noTasksMessage, incompleteItemList, input);
     });
 
     GetMostRecentItems(10, noTasksMessage, incompleteItemList);
+
+    CheckUser(ShowUserView, currentUser);
 });
 
 
@@ -125,4 +134,24 @@ function GetMostRecentItems(amount, noTasksMessage, incompleteItemList)
             console.log("Error when retrieving Todo's: "+error.code+" "+error.message);
         }
     });
+}
+
+//----------------------------------------------------------------
+// CheckUser 
+//      purpose: See if the user is signed in
+//----------------------------------------------------------------
+function CheckUser(ShowUserView, currentUser)
+{
+    var path = window.location.pathname;
+    // Show current user
+    if(!currentUser && path != "/parseTodo/public/signin.html")
+    {
+        window.location.href = "signin.html";
+    }
+    if(currentUser)
+    {
+        var showUserView = new ShowUserView({model: currentUser});
+        showUserView.render();
+        $('.random-container').html(showUserView.el);
+    }
 }
