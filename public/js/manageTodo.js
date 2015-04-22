@@ -5,33 +5,134 @@ $(document).ready(function()
 //------------------------------------------------------------------
     var ListItem;
     var query;
-    var noTasksMessage      = $("#no-incomplete-message:first");
-    var SubmitButton        = $("#list-item-submit:first");
-    var incompleteItemList  = $("#incomplete-items:first");
-    var completeItemList    = $("#complete-items:first");
-    var input               = $("#list-input:first");
 
     var currentUser = Parse.User.current();
 
     var ShowUserView = Parse.View.extend(
     {
-        template: Handlebars.compile($('#username-template').html()),
+        template: Handlebars.compile($('#home-template').html()),
         render: function()
         {
             var attributes = this.model.toJSON();
             this.$el.html(this.template(attributes));
         }
     });
+    var ShowSigninView = Parse.View.extend(
+    {
+        template: Handlebars.compile($('#signin-template').html()),
+        render: function()
+        {
+            this.$el.html(this.template());
+        }
+    });
+    var ShowSignupView = Parse.View.extend(
+    {
+        template: Handlebars.compile($('#signup-template').html()),
+        render: function()
+        {
+            this.$el.html(this.template());
+        }
+    });
 //------------------------------------------------------------------ END Variables
 
-    SubmitButton.on('click', function(e)
-    {   // Save newly typed Todo item
-        SaveNewTodo(noTasksMessage, incompleteItemList, input);
+    $(document).on("click", "#signin-nav", function(e)
+    {
+        CheckUser(ShowUserView, ShowSigninView, currentUser);
+    });
+    $(document).on("click", "#signup-nav", function(e)
+    {
+        // window.location.href = "signup.html";
+        SignUp(ShowSignupView);
+    });
+    $(document).on("click", "#signout-nav", function(e)
+    {
+        Parse.User.logOut();
+        currentUser = Parse.User.current();
+        // window.location.href = "signin.html";
+        CheckUser(ShowUserView, ShowSigninView, currentUser);
+    });
+    $(document).on("submit", "form.signin-form", function(event)
+    {
+        // Prevent default submit event
+        event.preventDefault();
+
+        // Get data from the form and put them into the variables
+        var data = $(this).serializeArray();
+        var username = data[0].value;
+        var password = $.sha256(data[1].value);
+
+        // Call Parse login function 
+        Parse.User.logIn(username, password,
+        {
+            // If the username and password matches
+            success: function(user)
+            {
+                // window.location.href = "index.html";
+                currentUser = Parse.User.current();
+                CheckUser(ShowUserView, ShowSigninView, currentUser);
+                GetMostRecentItems(10);
+            },
+            error: function(user, error)
+            {
+                console.log(error);
+                // Empty the inputs
+                $("#username-input").val(""); 
+                $("#password-input").val("");
+
+                // Check error code
+                if(error.code == "101")
+                    $("#input-wrapper").prepend("Incorrect username or password, try again.");
+            }
+        });
+    });
+    $(document).on("submit", "form.signup-form", function(event)
+    {
+        // Prevent default submit event
+        event.preventDefault();
+
+        // Get data from the form and put them into the variables
+        var data = $(this).serializeArray();
+        var username = data[0].value;
+        var password = $.sha256(data[1].value);
+        var repeatPassword = $.sha256(data[2].value);
+
+        if(password == repeatPassword)
+        {
+            var user = new Parse.User();
+            user.set("username", username);
+            user.set("password", password);
+
+            user.signUp(null,
+            {
+                success: function(user)
+                {
+                    ShowUser(ShowUserView, currentUser);
+                },
+                error: function(user, error)
+                {
+                    console.log("Error: "+error.code+" "+error.message);
+                    $("#username-input").val("");
+                    $("#password-input").val("");
+                    $("#re-password-input").val("");
+                }
+            });
+        }
+        else
+        {
+            $("#input-wrapper").prepend("Passwords didn't match, try again.");
+            $("#password-input").val("");
+            $("#re-password-input").val("");
+        }
     });
 
-    GetMostRecentItems(10, noTasksMessage, incompleteItemList);
+    $(document).on("click", "#list-item-submit", function(e)
+    {   // Save newly typed Todo item
+        SaveNewTodo();
+    });
 
-    CheckUser(ShowUserView, currentUser);
+    GetMostRecentItems(10);
+
+    CheckUser(ShowUserView, ShowSigninView, currentUser);
 });
 
 
@@ -39,10 +140,10 @@ $(document).ready(function()
 // SaveNewTodo 
 //      purpose: Save input text as a new Todo and add to the DOM
 //----------------------------------------------------------------
-function SaveNewTodo(noTasksMessage, incompleteItemList, input)
+function SaveNewTodo()
 {
     // Get the current Todo item
-    var text = $("#list-input:first").val();
+    var text = $("#list-input").val();
 
     // Extend native Parse Object class
     var ListItem = Parse.Object.extend("ListItem");
@@ -57,11 +158,11 @@ function SaveNewTodo(noTasksMessage, incompleteItemList, input)
     {
         success: function(item)
         {
-            noTasksMessage.addClass('hidden');
+            $("#no-incomplete-message").addClass('hidden');
             var html = " <li class='list-item'><input type='checkbox' id='"+item.id+"'>"+item.attributes.content+"</li>";
-            incompleteItemList.append(html);
-            input.focus();
-            input.val("");
+            $("#incomplete-items").append(html);
+            $("#list-input").focus();
+            $("#list-input").val("");
         },
         error: function(error)
         {
@@ -74,8 +175,9 @@ function SaveNewTodo(noTasksMessage, incompleteItemList, input)
 // GetMostRecentItems 
 //      purpose: Get the the next "amount" of unfinished Todo
 //----------------------------------------------------------------
-function GetMostRecentItems(amount, noTasksMessage, incompleteItemList)
+function GetMostRecentItems(amount)
 {
+    console.log("GetMostRecentItems >>>>");
     var ListItem = Parse.Object.extend("ListItem");
     var query    = new Parse.Query(ListItem);
 
@@ -90,17 +192,17 @@ function GetMostRecentItems(amount, noTasksMessage, incompleteItemList)
         success: function(results)
         {
             if(results.length > 0)
-                noTasksMessage.addClass('hidden');
+                $("#no-incomplete-message").addClass('hidden');
 
             // Append each of the incomplete tasks to the Inccomplete List
             $.each(results, function(index, value)
             {
                 var html = " <li class='list-item'><input type='checkbox' id='"+value.id+"'>"+value.attributes.content+"</li>";
-                incompleteItemList.append(html);
+                $("#incomplete-items").append(html);
             });
 
             // When the checkbox is clicked for any of the items in the Incomplete List, update the list
-            incompleteItemList.on("click", "li", function(e)
+            $("#incomplete-items").on("click", "li", function(e)
             {
                 var query           = new Parse.Query(ListItem);
                 var id              = $(this).find('input').attr('id');
@@ -125,7 +227,7 @@ function GetMostRecentItems(amount, noTasksMessage, incompleteItemList)
                     $(this).remove();
                     // If no more todo items exist, show no task message
                     if(todoListLength <= 0)
-                        noTasksMessage.removeClass('hidden');
+                        $("#no-incomplete-message").removeClass('hidden');
                 });
             });
         },
@@ -134,24 +236,54 @@ function GetMostRecentItems(amount, noTasksMessage, incompleteItemList)
             console.log("Error when retrieving Todo's: "+error.code+" "+error.message);
         }
     });
+    console.log("<<<< GetMostRecentItems");
 }
 
 //----------------------------------------------------------------
 // CheckUser 
 //      purpose: See if the user is signed in
 //----------------------------------------------------------------
-function CheckUser(ShowUserView, currentUser)
+function CheckUser(ShowUserView, ShowSigninView, currentUser)
 {
     var path = window.location.pathname;
-    // Show current user
-    if(!currentUser && path != "/parseTodo/public/signin.html")
-    {
-        window.location.href = "signin.html";
+
+    if(!currentUser)
+    {   // Not currently signed in so show signin page
+        SignIn(ShowSigninView);
     }
-    if(currentUser)
-    {
-        var showUserView = new ShowUserView({model: currentUser});
-        showUserView.render();
-        $('.random-container').html(showUserView.el);
+    else if(currentUser)
+    {   // Properly signed in so show user home page
+        ShowUser(ShowUserView, currentUser);
     }
+}
+
+//----------------------------------------------------------------
+// ShowUser 
+//      purpose: Render ShowUserView 
+//----------------------------------------------------------------
+function ShowUser(ShowUserView, currentUser)
+{
+    var showUserView = new ShowUserView({model: currentUser});
+    showUserView.render();
+    $('.random-container').html(showUserView.el);
+}
+//----------------------------------------------------------------
+// SignIn 
+//      purpose: Render ShowSigninView 
+//----------------------------------------------------------------
+function SignIn(ShowSigninView)
+{
+    var showSigninView = new ShowSigninView();
+    showSigninView.render();
+    $('.random-container').html(showSigninView.el);
+}
+//----------------------------------------------------------------
+// SignUp 
+//      purpose: Render ShowSignupView 
+//----------------------------------------------------------------
+function SignUp(ShowSignupView)
+{
+    var showSignupView = new ShowSignupView();
+    showSignupView.render();
+    $('.random-container').html(showSignupView.el);
 }

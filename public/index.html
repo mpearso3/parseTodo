@@ -13,49 +13,97 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
   <script type="text/javascript" src="http://www.parsecdn.com/js/parse-1.0.19.min.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
+  <script type="text/javascript" src="js/qunit.js"></script>
+  <script type="text/javascript" src="js/sha256.jquery.debug.js"></script>
   <!-- Handlebars.js -->
   <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
   <script type="text/javascript" src="js/admin.js"></script>
   <script type="text/javascript" src="js/manageTodo.js"></script>
 </head>
-
 <body>
-  <div class="main-container">
-    <nav class="navbar navbar-inverse todo-nav">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <a class="navbar-brand" href="index.html">Home</a>
-          <form class="navbar-form navbar-left" role="search">
-            <button type="button" id="signin-nav" class="btn btn-default">Sign in</button>
-            <button type="button" id="signup-nav" class="btn btn-default">Sign up</button>
-            <button type="button" id="signout-nav" class="btn btn-default">Sign out</button><!-- <a class="navbar-brand" href="signin.html">Signin</a> -->
-            <!-- <a class="navbar-brand" href="signup.html">Signup</a>  -->
-          </form>      
+  <div class="random-container">
+  </div>
+  <script id="home-template" type="text/x-handlebars-template">
+    <div class="main-container">
+      <nav class="navbar navbar-inverse todo-nav">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="index.html">Home</a>
+            <form class="navbar-form navbar-left" role="search">
+              <button type="button" id="signout-nav" class="btn btn-default">Sign out</button>
+            </form>      
+          </div>
+        </div>
+      </nav>
+      <div id="main-home">
+        <h2>Welcome, {{username}}</h2>
+        <div id="input-wrapper">
+            <input type="text" id="list-input" placeholder="Enter a todo here...">
+            <input type="button" id="list-item-submit" value="Add">
+        </div>
+        <div>
+            <h2>Incomplete Tasks</h2>
+            <ul id="incomplete-items">
+                <li id="no-incomplete-message">There are no incomplete tasks! Consider adding one above.</li>
+            </ul>
+        </div> 
+      </div>
+    </div>
+  </script>
+  <script id="signin-template" type="text/x-handlebars-template">
+    <div class="main-container">
+      <nav class="navbar navbar-inverse todo-nav">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="index.html">Home</a>
+            <form class="navbar-form navbar-left" role="search">
+              <button type="button" id="signin-nav" class="btn btn-default">Sign in</button>
+              <button type="button" id="signup-nav" class="btn btn-default">Sign up</button>
+            </form>      
+          </div>
+        </div>
+      </nav>
+      <div id="main-signin">
+        <h2>Login</h2>
+        <div id="input-wrapper">
+          <form class="signin-form">
+            <input type="text" name="username" id="username-input" required="" autofocus="" placeholder="Enter username...">
+            <br><br>
+            <input type="password" name="password" id="password-input" required="" placeholder="Enter password...">
+            <br><br>
+            <button id="signin-button" class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+          </form>
         </div>
       </div>
-    </nav>
-    <div class="random-container">
-
     </div>
-
-    <div id="main">
-      <div id="input-wrapper">
-          <input type="text" id="list-input" placeholder="Enter a todo here...">
-          <input type="button" id="list-item-submit" value="Add">
-      </div>
-      <div>
-          <h2>Incomplete Tasks</h2>
-          <ul id="incomplete-items">
-              <li id="no-incomplete-message">There are no incomplete tasks! Consider adding one above.</li>
-          </ul>
-      </div> 
-    </div>
-  </div>
-  <script id="username-template" type="text/x-handlebars-template">
-    <h2>Welcome, {{username}}</h2>
   </script>
-  <script id="login-template" type="text/x-handlebars-template">
-    <h2>Login, {{username}}</h2>
+  <script id="signup-template" type="text/x-handlebars-template">
+    <div class="main-container">
+      <nav class="navbar navbar-inverse todo-nav">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="index.html">Home</a>
+            <form class="navbar-form navbar-left" role="search">
+              <button type="button" id="signin-nav" class="btn btn-default">Sign in</button>
+              <button type="button" id="signup-nav" class="btn btn-default">Sign up</button>
+            </form>      
+          </div>
+        </div>
+      </nav>
+      <div id="main-signup">
+        <h2>Login</h2>
+        <div id="input-wrapper">
+          <form class="signup-form">
+            <input type="text" name="username" id="username-input" required="" autofocus="" placeholder="Enter username...">
+            <br><br>
+            <input type="password" name="password" id="password-input" required="" placeholder="Enter password...">
+            <br><br>
+            <input type="password" name="re-password" id="re-password-input" required="" placeholder="Enter password again...">
+            <br><br>
+            <button id="signup-button" class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+          </form>
+        </div>
+      </div>
+    </div>
   </script>
 </body>
-</html>

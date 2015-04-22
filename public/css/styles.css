@@ -6,9 +6,19 @@ body
     font-family: "HelveticaNeue-Light", sans-serif;
     font-weight:300;
 }
-#main 
+#main-signin, #main-signup 
 {
-    width: 500px;
+    width: 450px;
+    margin: auto;
+    text-align: left;
+    background: white;
+    padding: 50px 60px;
+    border: solid #ddd;
+    border-width: 0 1px 1px 1px;
+}
+#main-home 
+{
+    width: 505px;
     margin: auto;
     text-align: center;
     background: white;
@@ -16,7 +26,7 @@ body
     border: solid #ddd;
     border-width: 0 1px 1px 1px;
 }
-#main h1 
+h1 
 {
     margin-top: 0;
     font-size: 35px;
@@ -66,4 +76,8 @@ li
 li input 
 {
     margin-right:15px;
+}
+.btn-block
+{
+    width: 95%;
 }
